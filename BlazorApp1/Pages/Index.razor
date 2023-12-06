@@ -1,0 +1,47 @@
+﻿@page "/"
+@inject ExcelService ExcelService
+
+<h3>Import Excel Data</h3>
+
+<InputFile OnChange="@HandleFileUpload"/>
+
+@if (items != null)
+{
+    <table class="table">
+        <thead>
+            <tr>
+                @foreach (var header in items.First().Properties.Keys)
+                {
+                    <th>@header</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in items)
+            {
+                <tr>
+                    @foreach (var value in item.Properties.Values)
+                    {
+                        <td>@value</td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    List<DynamicItem> items;
+
+    async Task HandleFileUpload(InputFileChangeEventArgs e)
+    {
+        var file = e.GetMultipleFiles().FirstOrDefault();
+
+        if (file != null)
+        {
+            using var ms = new System.IO.MemoryStream();
+            await file.OpenReadStream(long.MaxValue).CopyToAsync(ms);
+            items = ExcelService.ReadExcel(ms.ToArray());
+        }
+    }
+}
